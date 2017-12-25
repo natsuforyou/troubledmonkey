@@ -1,18 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from flask import Flask, request
+from flask import Flask
 from flask_restful import Api, Resource, reqparse
 from ui.platfrom import Platform
 from ui.ios import IOS
 from ui.android import Android
 import mysql.connector
 from troubled.tamper import Tamper
-import json
+
+
+class Message:
+    @staticmethod
+    def success(data=None):
+        return {'code': 0, 'msg': '成功', 'data': data}
+
+    @staticmethod
+    def fail():
+        return {'code': 1, 'msg': '失败', 'data': None}
+
 
 app = Flask(__name__)
 api = Api(app)
-requestParser = reqparse.RequestParser()
 
 conn = mysql.connector.connect(host='127.0.0.1', user='tm', password='monkey', database='monkey')
 
@@ -41,73 +50,76 @@ def schedule(log_id: str):
 
 # 篡改结果
 @app.route('/tamper', methods=['POST'])
-def tamper(url: str, content: str):
+def tamper(url: str, content: str) -> str:
     return tamper.troubled(url, content)
 
 
-@api.resource('/schemas')
-class Schemas(Resource):
-    # 新增url schema
-    def post(self) -> None:
+@api.resource('/case')
+class Case(Resource):
+    # 新增case
+    def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('schema', type=str)
         parser.add_argument('name', type=str)
-        parser.add_argument('url', type=str)
+        parser.add_argument('schema', type=str)
+        parser.add_argument('keywords', type=str)
+        parser.add_argument('comments', type=str)
         args = parser.parse_args()
 
         _cursor = conn.cursor()
-        _cursor.execute('INSERT INTO url_schema (SCHEMA, NAME, URL) VALUES (?, ?, ?)', args)
-        _cursor.close()
-        pass
-
-    # 获取url schema
-    def get(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('page', type=int)
-        parser.add_argument('pageSize', type=int)
-        args = parser.parse_args()
-        _cursor = conn.cursor()
-        values = _cursor.execute('SELECT * FROM url_schema')
-        _cursor.close()
-        return values
+        _cursor.execute('INSERT INTO url_case (`NAME`,`SCHEMA`, `KEYWORDS`, `COMMENTS`) VALUES (?, ?, ?, ?)', args)
+        return Message.success()
 
 
 @api.resource('/cases')
 class Cases(Resource):
-    # 新增case
-    def post(self) -> None:
-        args = request.values
+    # 获取cases
+    def get(self):
         _cursor = conn.cursor()
-        _cursor.execute('INSERT INTO test_case VALUES (?, ?, ?)', ())
-        _cursor.close()
-        pass
+        values = _cursor.execute('SELECT * FROM url_case')
+        return Message.success(values)
 
+
+@api.resource('/task')
+class Task(Resource):
+    # 新增task
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', type=str)
+        parser.add_argument('team', type=str)
+        parser.add_argument('platform', type=str)
+        parser.add_argument('comments', type=str)
+        args = parser.parse_args()
+        _cursor = conn.cursor()
+        _cursor.execute('INSERT INTO test_task (`NAME`,`TEAM`, `PLATFORM`, `COMMENTS`) VALUES (?, ?, ?, ?)', args)
+        return Message.success()
+
+
+@api.resource('/tasks')
+class Tasks(Resource):
     # 获取case
     def get(self):
-        args = request.values
         _cursor = conn.cursor()
-        values = _cursor.execute('SELECT * FROM test_case')
-        _cursor.close()
-        return values
+        values = _cursor.execute('SELECT * FROM test_task')
+        return Message.success(values)
 
 
-@api.resource('/logs')
-class Log(Resource):
-    # 获取日志
-    @app.route('/logs', methods=['GET'])
-    def logs(self):
-        _cursor = conn.cursor()
-        values = _cursor.execute('SELECT * FROM troubled_log')
-        _cursor.close()
-        return values
-
-    # 获取某个日志
-    @app.route('/log/<log_id>', methods=['GET'])
-    def log(log_id: str):
-        _cursor = conn.cursor()
-        values = _cursor.execute('SELECT * FROM troubled_log WHERE LOG_ID = ?', log_id)
-        _cursor.close()
-        return values
+# @api.resource('/logs')
+# class Log(Resource):
+#     # 获取日志
+#     @app.route('/logs', methods=['GET'])
+#     def logs(self):
+#         _cursor = conn.cursor()
+#         values = _cursor.execute('SELECT * FROM troubled_log')
+#         _cursor.close()
+#         return values
+#
+#     # 获取某个日志
+#     @app.route('/log/<log_id>', methods=['GET'])
+#     def log(log_id: str):
+#         _cursor = conn.cursor()
+#         values = _cursor.execute('SELECT * FROM troubled_log WHERE LOG_ID = ?', log_id)
+#         _cursor.close()
+#         return values
 
 
 if __name__ == '__main__':

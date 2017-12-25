@@ -30,13 +30,13 @@ class Tamper:
                     troubled_log_by_url[name] = change_type
                     return change_type
 
-    def troubled(self, url, content: bytes) -> bytes:
-        body = json.loads(content, encoding='utf-8')
+    def troubled(self, url, content: str) -> str:
+        body = json.loads(content)
         normal_response = json.dumps(body)
         selected_change_type = self.do_troubled(url, '', body)
         changed_response = json.dumps(body)
         TroubleLog(url, normal_response, selected_change_type, changed_response).commit()
-        return changed_response.encode('utf-8')
+        return changed_response
 
     def do_troubled(self, url, name, element) -> int:
         if isinstance(element, list):
