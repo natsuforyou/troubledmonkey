@@ -11,6 +11,9 @@ class Android(Platform):
         'cmblife://go?url=YummyCouponRush'
     ]
 
+    def __init__(self):
+        pass
+
     def start(self):
         for url in self.url_list:
             for index in range(0, 10):
@@ -19,9 +22,6 @@ class Android(Platform):
                 time.sleep(30)
                 pid = self.get_current_pid()
                 os.system("adb shell am force-stop com.cmbchina.ccd.pluto.cmbActivity")
-
-    def init(self):
-        pass
 
     def get_current_pid(self):
         output = os.popen(

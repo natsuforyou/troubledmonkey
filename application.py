@@ -5,7 +5,7 @@ from flask import Flask
 
 from views.case import case
 from views.log import log
-from views.tamper import tampers
+from views.tamper import tamper
 from views.task import task
 from views.wrapper import Response, CustomEncoder
 
@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.register_blueprint(case)
 app.register_blueprint(task)
 app.register_blueprint(log)
-app.register_blueprint(tampers)
+app.register_blueprint(tamper)
 app.json_encoder = CustomEncoder
 
 

@@ -15,6 +15,9 @@ class IOS(Platform):
         'cmblife://go?url=Mktcinemas'
     ]
 
+    def __init__(self):
+        pass
+
     def start(self):
         for url in self.url_list:
             for index in range(0, 100):

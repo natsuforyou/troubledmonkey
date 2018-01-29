@@ -6,6 +6,3 @@ class Platform(object):
 
     def start(self):
         pass
-
-    def init(self):
-        pass

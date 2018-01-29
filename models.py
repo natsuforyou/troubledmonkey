@@ -41,12 +41,14 @@ class Task(Base):
     NAME = Column(String(20))
     TEAM = Column(String(10))
     PLATFORM = Column(String(20))
+    CASES = Column(String(100), nullable=False)
     COMMENTS = Column(String(50))
 
     def __init__(self, obj):
         self.NAME = obj.get('name')
         self.SCHEMA = obj.get('team')
         self.KEYWORDS = obj.get('platform')
+        self.CASES = obj.get('cases')
         self.COMMENTS = obj.get('comments')
 
     def __str__(self):
@@ -54,6 +56,7 @@ class Task(Base):
                 'name': self.NAME,
                 'team': self.TEAM,
                 'platform': self.PLATFORM,
+                'cases': self.CASES,
                 'comments': self.COMMENTS}
 
 
@@ -88,8 +91,12 @@ class TroubledLog(Base):
     LOG_SIZE = Column(Integer)
     OFFSET = Column(Integer)
 
-    def __init__(self):
-        pass
+    def __init__(self, **kwargs):
+        self.TASK_ID = kwargs.get('task_id')
+        self.TASK_NAME = kwargs.get('task_name')
+        self.STATUS = kwargs.get('status')
+        self.LOG_SIZE = kwargs.get('log_size')
+        self.OFFSET = kwargs.get('offset')
 
     def __str__(self):
         return {'id': self.ID,
@@ -115,8 +122,12 @@ class TroubledLogDetail(Base):
     SCREEN_SHOT = Column(String(50))
     CREATE_TIME = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
 
-    def __init__(self):
-        pass
+    def __init__(self, **kwargs):
+        self.LOG_ID = kwargs.get('log_id')
+        self.CASE_ID = kwargs.get('case_id')
+        self.CASE_NAME = kwargs.get('case_name')
+        self.TROUBLED_STRATEGY = kwargs.get('troubled_strategy')
+        self.TROUBLED_RESPONSE = kwargs.get('troubled_response')
 
     def __str__(self):
         return {'id': self.ID,
