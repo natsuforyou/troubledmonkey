@@ -4,10 +4,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from . import db_url
+
 Base = declarative_base()
 metadata = Base.metadata
 
-db = create_engine('mysql+pymysql://tm:monkey@127.0.0.1:3306/monkey?charset=utf8')
+db = create_engine(db_url)
 session = sessionmaker(bind=db)()
 
 
@@ -18,19 +20,24 @@ class Case(Base):
     NAME = Column(String(20))
     SCHEMA = Column(String(100))
     KEYWORDS = Column(String(100))
+    RESPONSE = Column(String(500))
+    TOTAL_COUNT = Column(Integer)
     COMMENTS = Column(String(50))
 
-    def __init__(self, obj):
-        self.NAME = obj.get('name')
-        self.SCHEMA = obj.get('schema')
-        self.KEYWORDS = obj.get('keywords')
-        self.COMMENTS = obj.get('comments')
+    def __init__(self, **kwargs):
+        self.NAME = kwargs.get('name')
+        self.SCHEMA = kwargs.get('schema')
+        self.KEYWORDS = kwargs.get('keywords')
+        self.RESPONSE = kwargs.get('response')
+        self.TOTAL_COUNT = kwargs.get('total_count')
+        self.COMMENTS = kwargs.get('comments')
 
     def __str__(self):
         return {'id': self.ID,
                 'name': self.NAME,
                 'schema': self.SCHEMA,
                 'keywords': self.KEYWORDS,
+                'total_count': self.TOTAL_COUNT,
                 'comments': self.COMMENTS}
 
 
@@ -86,7 +93,7 @@ class TroubledLog(Base):
     ID = Column(Integer, primary_key=True)
     TASK_ID = Column(Integer)
     TASK_NAME = Column(String(20))
-    STATUS = Column(String(10))
+    STATE = Column(String(10))
     CREATE_TIME = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
     LOG_SIZE = Column(Integer)
     OFFSET = Column(Integer)
@@ -94,7 +101,7 @@ class TroubledLog(Base):
     def __init__(self, **kwargs):
         self.TASK_ID = kwargs.get('task_id')
         self.TASK_NAME = kwargs.get('task_name')
-        self.STATUS = kwargs.get('status')
+        self.STATE = kwargs.get('state')
         self.LOG_SIZE = kwargs.get('log_size')
         self.OFFSET = kwargs.get('offset')
 
@@ -102,7 +109,7 @@ class TroubledLog(Base):
         return {'id': self.ID,
                 'taskId': self.TASK_ID,
                 'taskName': self.TASK_NAME,
-                'status': self.STATUS,
+                'state': self.STATE,
                 'createTime': self.CREATE_TIME,
                 'logSize': self.LOG_SIZE,
                 'offset': self.OFFSET}
@@ -117,9 +124,10 @@ class TroubledLogDetail(Base):
     CASE_NAME = Column(String(20))
     TROUBLED_STRATEGY = Column(String(20))
     TROUBLED_RESPONSE = Column(String)
+    STATE = Column(String)
     IS_CRASH = Column(String(5))
     CRASH_LOG = Column(String(500))
-    SCREEN_SHOT = Column(String(50))
+    SCREEN_SHOT = Column(String)
     CREATE_TIME = Column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
 
     def __init__(self, **kwargs):
@@ -128,6 +136,10 @@ class TroubledLogDetail(Base):
         self.CASE_NAME = kwargs.get('case_name')
         self.TROUBLED_STRATEGY = kwargs.get('troubled_strategy')
         self.TROUBLED_RESPONSE = kwargs.get('troubled_response')
+        self.STATE = kwargs.get('state')
+        self.IS_CRASH = kwargs.get('is_crash')
+        self.CRASH_LOG = kwargs.get('crash_log')
+        self.SCREEN_SHOT = kwargs.get('screen_shot')
 
     def __str__(self):
         return {'id': self.ID,

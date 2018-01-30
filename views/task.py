@@ -1,11 +1,10 @@
 from flask import Blueprint
 from flask_restful import reqparse
 
-from models import Task, TroubledLog, session
-from ui.android import Android
-from ui.ios import IOS
-from ui.platfrom import Platform
+from models import Case, Task, TroubledLog, session
+from ui import OS
 from views.wrapper import Response
+from .. import TroubledLogState
 
 task = Blueprint('task', __name__)
 
@@ -34,18 +33,27 @@ def add_task():
 
 # 启动case
 @task.route('/tasks/<task_id>', methods=['PUT'])
-def start_ui(task_id: str) -> None:
-    task = session.query(Task).filter(Task.ID == task_id).one_or_none()
-    if task is None:
+def start_task(task_id: str) -> None:
+    _processing_logs = session.query(TroubledLog).filter(TroubledLog.TASK_ID == task_id).filter(
+        TroubledLog.STATE == TroubledLogState.PROCESSING).all()
+
+    if _processing_logs is not None:
+        raise RuntimeError('当前有任务正在执行中')
+
+    _task = session.query(Task).filter(Task.ID == task_id).one_or_none()
+    if _task is None:
         raise RuntimeError('无法执行该条任务，因为该任务不存在！')
-    platform = get_instance_of_platform(task.PLATFORM)
-    session.add(TroubledLog(task_id=task_id, task_name=task.NAME, status='PROCESSING', log_size=1000, offset=0))
+    session.add(
+        TroubledLog(task_id=task_id, task_name=_task.NAME, state=TroubledLogState.PROCESSING, log_size=1000, offset=0))
     session.commit()
-    platform.start()
 
+    _troubled_log = session.query(TroubledLog).filter(TroubledLog.TASK_ID == task_id).filter(
+        TroubledLog.STATE == TroubledLogState.PROCESSING).one_or_none()
 
-def get_instance_of_platform(platform: str) -> Platform:
-    if platform.upper() == 'IOS':
-        return IOS()
-    if platform.upper() == 'ANDROID':
-        return Android()
+    _case_id = _task.CASES
+    _cases = session.query(Case).filter(Case.ID in _case_id.split(',')).all()
+
+    os = OS.instance(_task.PLATFORM)
+    os.start(_troubled_log, _cases)
+
+    os.destroy(_troubled_log)

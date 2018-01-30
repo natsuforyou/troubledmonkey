@@ -5,7 +5,7 @@ from flask import Flask
 
 from views.case import case
 from views.log import log
-from views.tamper import tamper
+from views.banana import banana
 from views.task import task
 from views.wrapper import Response, CustomEncoder
 
@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.register_blueprint(case)
 app.register_blueprint(task)
 app.register_blueprint(log)
-app.register_blueprint(tamper)
+app.register_blueprint(banana)
 app.json_encoder = CustomEncoder
 
 
@@ -24,4 +24,4 @@ def handle_exception(error):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, threaded=True, debug=True)
+    app.run(host='0.0.0.0', port=8080, threaded=True)

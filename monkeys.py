@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import sys
-import random
 import json
+import random
+import sys
 
-from troubled.changetype import ChangeType
+from . import ChangeType
 from models import TroubledLogDetail, session
 
 
 class Monkey(object):
     def support(self, change_type: int) -> bool: pass
-
-    def tramp(self, body, name, value, change_type): pass
 
     def make_trouble(self, body, name, value) -> None: pass
 
@@ -79,10 +77,18 @@ class Monkeys(Monkey):
     monkeyCache = {}
     trouble_count = 0
 
-    # current_trouble_count = trouble_count
-
     def __init__(self, *args: Monkey):
         self.monkeys = args
+
+    @staticmethod
+    def default_instance():
+        return Monkeys(ChangeToNegativeMonkey(),
+                       ChangeToBigMonkey(),
+                       ChangeToNumberMonkey(),
+                       ChangeToStringMonkey(),
+                       ChangeToNoneMonkey(),
+                       ChangeToDelMonkey(),
+                       ChangeToAddMonkey())
 
     def support(self, change_type: int) -> bool:
         if len(self.monkeys) > 0:
@@ -105,18 +111,26 @@ class Monkeys(Monkey):
                     break
         return result
 
-    def troubled(self, log_id, case, url, content) -> str:
+    # def troubled(self, log_id, case, url, content) -> str:
+    #     json_object = json.loads(content)
+    #
+    #     selected_change_type = self.do_troubled(url, '', json_object)
+    #     changed_response = json.dumps(json_object)
+    #
+    #     troubled_log_detail = TroubledLogDetail(log_id=log_id, case_id=case.ID, case_name=case.NAME,
+    #                                             troubled_strategy='',
+    #                                             troubled_response=changed_response)
+    #     session.add(troubled_log_detail)
+    #     session.commit()
+    #     return changed_response
+
+    def troubled(self, url, content) -> dict:
         json_object = json.loads(content)
 
-        selected_change_type = self.do_troubled(url, '', json_object)
+        trouble_count = self.do_troubled(url, '', json_object)
         changed_response = json.dumps(json_object)
 
-        troubled_log_detail = TroubledLogDetail(log_id=log_id, case_id=case.ID, case_name=case.NAME,
-                                                troubled_strategy='',
-                                                troubled_response=changed_response)
-        session.add(troubled_log_detail)
-        session.commit()
-        return changed_response
+        return {'trouble_count': trouble_count, 'changed_response': changed_response}
 
     def do_troubled(self, url, name, element, trouble_count=None):
         if trouble_count is None:
@@ -129,36 +143,27 @@ class Monkeys(Monkey):
                     return self.do_troubled(url, name + '[' + key + ']', value, trouble_count)
                 else:
                     if trouble_count < len(self.monkeys):
-                        # print(name + '[' + key + ']')
                         self.make_trouble(element, key, value)
                         return trouble_count
                     else:
                         trouble_count -= len(self.monkeys)
 
-    def count(self, url, name, element, trouble_count=0):
-        if trouble_count is None:
-            trouble_count = self.trouble_count
+    def count(self, element, trouble_count: int = 0) -> int:
         if isinstance(element, list):
-            return self.count(url, name + '[0]', element[0], trouble_count)
+            return self.count(element[0], trouble_count)
         elif isinstance(element, dict):
             for key, value in element.items():
                 if isinstance(value, list) | isinstance(value, dict):
-                    return self.count(url, name + '[' + key + ']', value, trouble_count)
+                    return self.count(value, trouble_count)
                 else:
                     trouble_count += len(self.monkeys)
             return trouble_count
 
 
-if __name__ == '__main__':
-    monkeys = Monkeys(ChangeToNegativeMonkey(),
-                      ChangeToBigMonkey(),
-                      ChangeToNumberMonkey(),
-                      ChangeToStringMonkey(),
-                      ChangeToNoneMonkey(),
-                      ChangeToDelMonkey(),
-                      ChangeToAddMonkey())
+monkeys = Monkeys.default_instance()
 
-    content = {
+if __name__ == '__main__':
+    _content = {
         'returnCode': 200,
         'returnMsg': '操作成功',
         'data': {
@@ -171,9 +176,9 @@ if __name__ == '__main__':
         }
     }
 
-    o = json.dumps(content)
-    body = json.loads(o)
-    a = monkeys.count('', '', body)
+    o = json.dumps(_content)
+    _body = json.loads(o)
+    a = monkeys.count(_body)
     print(a)
 
     # for x in range(0, 100):
