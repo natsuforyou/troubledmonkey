@@ -4,7 +4,7 @@ from flask_restful import reqparse
 from models import Case, Task, TroubledLog, session
 from ui import OS
 from views.wrapper import Response
-from .. import TroubledLogState
+from base import TroubledLogState
 
 task = Blueprint('task', __name__)
 

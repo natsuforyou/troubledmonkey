@@ -16,5 +16,5 @@ def get_logs():
 # 获取某一个日志
 @log.route(rule='/logs/<int:log_id>', methods=['GET'])
 def get_log(log_id: str):
-    values = session.query(TroubledLogDetail).filter(TroubledLogDetail.ID == log_id)
+    values = session.query(TroubledLogDetail).filter(TroubledLogDetail.LOG_ID == log_id).all()
     return Response.success(values)

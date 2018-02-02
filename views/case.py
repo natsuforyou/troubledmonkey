@@ -17,7 +17,7 @@ def get_cases():
     return Response.success(values)
 
 
-@case.route(rule='/cases', methods=['POST'])
+@case.route(rule='/cases/total', methods=['POST'])
 def get_total():
     parser = reqparse.RequestParser()
     parser.add_argument('response', type=str)
@@ -37,7 +37,6 @@ def add_case():
     parser.add_argument('total_count', type=int)
     parser.add_argument('comments', type=str)
     args = parser.parse_args()
-    session.add(Case(name=args.get('name'), schema=args.get('schema'), keywords=args.get('keywords'),
-                     response=args.get('response'), total_count=args.get('total_count'), comments=args.get('comments')))
+    session.add(Case(**args))
     session.commit()
     return Response.success()

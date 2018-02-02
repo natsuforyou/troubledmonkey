@@ -5,7 +5,7 @@ import json
 import random
 import sys
 
-from . import ChangeType
+from base import ChangeType
 from models import TroubledLogDetail, session
 
 
@@ -157,7 +157,7 @@ class Monkeys(Monkey):
                     return self.count(value, trouble_count)
                 else:
                     trouble_count += len(self.monkeys)
-            return trouble_count
+        return trouble_count
 
 
 monkeys = Monkeys.default_instance()

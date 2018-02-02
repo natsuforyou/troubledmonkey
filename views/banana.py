@@ -4,14 +4,14 @@ import json
 
 from models import Case, TroubledLog, TroubledLogDetail, session
 from monkeys import monkeys
-from .. import TroubledLogState, TroubledLogDetailState
+from base import TroubledLogState, TroubledLogDetailState
 
 banana = Blueprint('banana', __name__)
 
 
 # 篡改结果
 @banana.route('/bananas', methods=['POST'])
-def banana() -> str:
+def bananas() -> str:
     parser = reqparse.RequestParser()
     parser.add_argument('url', type=str)
     parser.add_argument('param', type=str)

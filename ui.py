@@ -5,7 +5,7 @@ import wda
 import os
 import time
 from models import Case, TroubledLog, TroubledLogDetail, session
-from . import OSType, TroubledLogState, TroubledLogDetailState
+from base import OSType, TroubledLogState, TroubledLogDetailState
 
 
 class OS:

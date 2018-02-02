@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from . import db_url
+from base import db_url
 
 Base = declarative_base()
 metadata = Base.metadata
