@@ -1,5 +1,5 @@
 from flask import jsonify, json
-from models import Case, Task, TaskCase, TroubledLog, TroubledLogDetail
+from models import Case, Task, TroubledLog, TroubledLogDetail
 
 
 class Response:
@@ -17,8 +17,6 @@ class CustomEncoder(json.JSONEncoder):
         if isinstance(obj, Case):
             return obj.__str__()
         if isinstance(obj, Task):
-            return obj.__str__()
-        if isinstance(obj, TaskCase):
             return obj.__str__()
         if isinstance(obj, TroubledLog):
             return obj.__str__()

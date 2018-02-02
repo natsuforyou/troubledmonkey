@@ -67,26 +67,6 @@ class Task(Base):
                 'comments': self.COMMENTS}
 
 
-class TaskCase(Base):
-    __tablename__ = 'task_case'
-
-    ID = Column(Integer, primary_key=True)
-    TASK_ID = Column(Integer)
-    TASK_NAME = Column(String(20))
-    CASE_ID = Column(Integer)
-    CASE_NAME = Column(String(20))
-
-    def __init__(self):
-        pass
-
-    def __str__(self):
-        return {'id': self.ID,
-                'taskId': self.TASK_ID,
-                'taskName': self.TASK_NAME,
-                'caseId': self.CASE_ID,
-                'caseName': self.CASE_NAME}
-
-
 class TroubledLog(Base):
     __tablename__ = 'troubled_log'
 

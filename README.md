@@ -3,8 +3,9 @@
 ## Requires:
 
 ```
-faceboot-wda
-flask
+Flask-RESTful
+Flask-SQLAlchemy
+pymysql
 mitmproxy
-mysql-connector-python
+faceboot-wda
 ```
