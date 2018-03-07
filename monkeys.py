@@ -72,6 +72,7 @@ class ChangeToAddMonkey(Monkey):
 
 
 class Monkeys(Monkey):
+    # 篡改器的数组
     monkeys = []
     monkeyCache = {}
     trouble_count = 0
@@ -118,21 +119,21 @@ class Monkeys(Monkey):
 
         return {'trouble_count': trouble_count, 'changed_response': changed_response}
 
-    def do_troubled(self, url, name, element, trouble_count=None):
-        if trouble_count is None:
-            trouble_count = self.trouble_count
+    def do_troubled(self, url, name, element, _trouble_count=None):
+        if _trouble_count is None:
+            _trouble_count = self.trouble_count
         if isinstance(element, list):
-            return self.do_troubled(url, name + '[0]', element[0], trouble_count)
+            return self.do_troubled(url, name + '[0]', element[0], _trouble_count)
         elif isinstance(element, dict):
             for key, value in element.items():
                 if isinstance(value, list) | isinstance(value, dict):
-                    return self.do_troubled(url, name + '[' + key + ']', value, trouble_count)
+                    return self.do_troubled(url, name + '[' + key + ']', value, _trouble_count)
                 else:
-                    if trouble_count < len(self.monkeys):
+                    if _trouble_count < len(self.monkeys):
                         self.make_trouble(element, key, value)
-                        return trouble_count
+                        return _trouble_count
                     else:
-                        trouble_count -= len(self.monkeys)
+                        _trouble_count -= len(self.monkeys)
 
     def count(self, element, trouble_count: int = 0) -> int:
         if isinstance(element, list):
@@ -146,6 +147,7 @@ class Monkeys(Monkey):
         return trouble_count
 
 
+# 全局变量
 monkeys = Monkeys.default_instance()
 
 if __name__ == '__main__':

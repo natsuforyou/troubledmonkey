@@ -24,6 +24,7 @@ class Case(Base):
     TOTAL_COUNT = Column(Integer)
     COMMENTS = Column(String(50))
 
+    # 把字典变成对象
     def __init__(self, **kwargs):
         self.NAME = kwargs.get('name')
         self.SCHEMA = kwargs.get('schema')
@@ -32,6 +33,7 @@ class Case(Base):
         self.TOTAL_COUNT = kwargs.get('total_count')
         self.COMMENTS = kwargs.get('comments')
 
+    # 把对象变成字典
     def __str__(self):
         return {'id': self.ID,
                 'name': self.NAME,

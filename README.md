@@ -5,6 +5,7 @@
 ### Python3 Requires
 
 ```
+pip3
 Flask-RESTful
 Flask-SQLAlchemy
 pymysql
@@ -17,6 +18,7 @@ facebook-wda
 ```
 mysql
 android sdk
+node-js
 ```
 
 ## IOS quick start

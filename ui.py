@@ -5,7 +5,7 @@ import wda
 import os
 import time
 from models import Case, TroubledLog, TroubledLogDetail, session_maker
-from base import OSType, TroubledLogState, TroubledLogDetailState
+from base import OSType, TroubledLogDetailState
 
 
 class OS:
@@ -38,6 +38,7 @@ class IOS(OS):
     client = None
 
     def init(self):
+
         self.client = wda.Client()
 
     def start(self, log: TroubledLog, *args: Case):
@@ -51,7 +52,7 @@ class IOS(OS):
                 _session = self.client.session('com.apple.mobilesafari', ['-u', case.SCHEMA])
                 try:
                     _session(name=u'打开').click_exists()
-                    time.sleep(10)
+                    time.sleep(5)
                 except Exception as e:
                     _is_crash = True
                     _crash_log = str(e)
@@ -66,7 +67,7 @@ class IOS(OS):
                          TroubledLogDetail.STATE: TroubledLogDetailState.DONE})
                     session.commit()
                     if _session(name=u"确认").click_exists():
-                        time.sleep(5)
+                        time.sleep(1)
 
                     _session.tap(40, 44)
                     _session.close()
@@ -80,24 +81,34 @@ class Android(OS):
     def start(self, log: TroubledLog, *args: Case):
         session = session_maker()
         for case in args:
-            for _ in case.TOTAL_COUNT:
+            for _ in range(case.TOTAL_COUNT):
                 super().init_log_detail(log, case)
                 _is_crash = False
                 _crash_log = ''
                 try:
                     os.popen(
                         'adb shell am start -n com.cmbchina.ccd.pluto.cmbActivity/.SplashActivity -d ' + case.SCHEMA)
-                    pid = self.get_current_pid()
-                    time.sleep(30)
+                    #pid = os.getpid()
+                    #time.sleep(30)
+
+                    pid1 = pid2 = os.getpid()
+                    i = 0
+                    #从启动APP开始,如果pid没有改变则等待15秒关闭
+                    while pid1 == pid2 and i < 20:
+                        time.sleep(1)
+                        i += 1
+                        pid2 = os.getpid()
+                        #print("get pid:" + str(pid2))
+
                 except Exception as e:
                     print(e)
                 finally:
-                    new_pid = self.get_current_pid()
-                    if new_pid != pid:
+                    new_pid = os.getpid()
+                    if new_pid != pid1:
                         _is_crash = True
                         _crash_log = ''
                     # 截图
-                    _image: str
+                    _image: str = ''
 
                     # _troubled_log_detail = session.query(TroubledLogDetail).filter(
                     #     TroubledLogDetail.LOG_ID == log.ID).filter(
