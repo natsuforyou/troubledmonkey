@@ -4,7 +4,7 @@
 import wda
 import os
 import time
-from models import Case, TroubledLog, TroubledLogDetail, session
+from models import Case, TroubledLog, TroubledLogDetail, session_maker
 from base import OSType, TroubledLogState, TroubledLogDetailState
 
 
@@ -18,6 +18,7 @@ class OS:
         else:
             raise RuntimeError('未知的平台：' + os_type)
         os.init()
+        return os
 
     def init(self):
         pass
@@ -26,14 +27,10 @@ class OS:
         pass
 
     def init_log_detail(self, log: TroubledLog, case: Case):
+        session = session_maker()
         _troubled_log_detail = TroubledLogDetail(log_id=log.ID, case_id=case.ID, case_name=case.NAME,
                                                  state=TroubledLogDetailState.UI_START)
         session.add(_troubled_log_detail)
-        session.commit()
-
-    def destroy(self, log: TroubledLog):
-        log.STATE = TroubledLogState.DONE
-        session.update(log)
         session.commit()
 
 
@@ -44,11 +41,13 @@ class IOS(OS):
         self.client = wda.Client()
 
     def start(self, log: TroubledLog, *args: Case):
+        session = session_maker()
         for case in args:
-            for _ in case.TOTAL_COUNT:
+            count = case.TOTAL_COUNT
+            while count > 0:
                 super().init_log_detail(log, case)
-                _is_crash: bool
-                _crash_log: str
+                _is_crash = False
+                _crash_log = ''
                 _session = self.client.session('com.apple.mobilesafari', ['-u', case.SCHEMA])
                 try:
                     _session(name=u'打开').click_exists()
@@ -58,24 +57,20 @@ class IOS(OS):
                     _crash_log = str(e)
                 finally:
                     _image = self.client.http.get('screenshot').value
-                    _troubled_log_detail = session.query(TroubledLogDetail).filter(
+                    session.query(TroubledLogDetail).filter(
                         TroubledLogDetail.LOG_ID == log.ID).filter(
-                        TroubledLogDetail.STATE == TroubledLogDetailState.MONKEY_DONE).one_or_none()
-
-                    if _troubled_log_detail is not None:
-                        _troubled_log_detail.IS_CRASH = _is_crash
-                        _troubled_log_detail.CRASH_LOG = _crash_log
-                        _troubled_log_detail.SCREEN_SHOT = _image
-                        _troubled_log_detail.STATE = TroubledLogDetailState.DONE
-                        session.update(_troubled_log_detail)
-                        session.commit()
+                        TroubledLogDetail.STATE == TroubledLogDetailState.MONKEY_DONE).update(
+                        {TroubledLogDetail.IS_CRASH: _is_crash,
+                         TroubledLogDetail.CRASH_LOG: _crash_log,
+                         TroubledLogDetail.SCREEN_SHOT: _image,
+                         TroubledLogDetail.STATE: TroubledLogDetailState.DONE})
+                    session.commit()
+                    if _session(name=u"确认").click_exists():
+                        time.sleep(5)
 
                     _session.tap(40, 44)
                     _session.close()
-
-    def destroy(self, log: TroubledLog):
-        super(IOS, self).destroy(log)
-        return
+                count -= 1
 
 
 class Android(OS):
@@ -83,11 +78,12 @@ class Android(OS):
         pass
 
     def start(self, log: TroubledLog, *args: Case):
+        session = session_maker()
         for case in args:
             for _ in case.TOTAL_COUNT:
                 super().init_log_detail(log, case)
-                _is_crash: bool
-                _crash_log: str
+                _is_crash = False
+                _crash_log = ''
                 try:
                     os.popen(
                         'adb shell am start -n com.cmbchina.ccd.pluto.cmbActivity/.SplashActivity -d ' + case.SCHEMA)
@@ -103,21 +99,25 @@ class Android(OS):
                     # 截图
                     _image: str
 
-                    _troubled_log_detail = session.query(TroubledLogDetail).filter(
+                    # _troubled_log_detail = session.query(TroubledLogDetail).filter(
+                    #     TroubledLogDetail.LOG_ID == log.ID).filter(
+                    #     TroubledLogDetail.STATE == TroubledLogDetailState.MONKEY_DONE).one_or_none()
+                    #
+                    # if _troubled_log_detail is not None:
+                    #     _troubled_log_detail.IS_CRASH = _is_crash
+                    #     _troubled_log_detail.CRASH_LOG = _crash_log
+                    #     _troubled_log_detail.SCREEN_SHOT = _image
+                    #     session.update(_troubled_log_detail)
+                    session.query(TroubledLogDetail).filter(
                         TroubledLogDetail.LOG_ID == log.ID).filter(
-                        TroubledLogDetail.STATE == TroubledLogDetailState.MONKEY_DONE).one_or_none()
-
-                    if _troubled_log_detail is not None:
-                        _troubled_log_detail.IS_CRASH = _is_crash
-                        _troubled_log_detail.CRASH_LOG = _crash_log
-                        _troubled_log_detail.SCREEN_SHOT = _image
-                        session.update(_troubled_log_detail)
+                        TroubledLogDetail.STATE == TroubledLogDetailState.MONKEY_DONE).update(
+                        {TroubledLogDetail.IS_CRASH: _is_crash,
+                         TroubledLogDetail.CRASH_LOG: _crash_log,
+                         TroubledLogDetail.SCREEN_SHOT: _image,
+                         TroubledLogDetail.STATE: TroubledLogDetailState.DONE})
+                    session.commit()
 
                     os.system("adb shell am force-stop com.cmbchina.ccd.pluto.cmbActivity")
-
-    def destroy(self, log: TroubledLog):
-        super(Android, self).destroy(log)
-        return
 
     @staticmethod
     def get_current_pid():

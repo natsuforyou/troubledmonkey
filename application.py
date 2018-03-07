@@ -8,8 +8,6 @@ from views.log import log
 from views.banana import banana
 from views.task import task
 from views.wrapper import Response, CustomEncoder
-from models import session
-from pymysql.err import MySQLError
 
 app = Flask(__name__)
 app.register_blueprint(case)
@@ -19,13 +17,6 @@ app.register_blueprint(banana)
 app.json_encoder = CustomEncoder
 
 
-@app.errorhandler(MySQLError)
-def handle_exception(error):
-    session.rollback()
-    print(error)
-    return Response.fail(str(error))
-
-
 @app.errorhandler(Exception)
 def handle_exception(error):
     print(error)
@@ -33,4 +24,4 @@ def handle_exception(error):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, threaded=True, debug=True)
+    app.run(host='0.0.0.0', port=8081, threaded=True, debug=True)

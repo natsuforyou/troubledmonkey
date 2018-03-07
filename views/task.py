@@ -1,7 +1,7 @@
 from flask import Blueprint
 from flask_restful import reqparse
 
-from models import Case, Task, TroubledLog, session
+from models import Case, Task, TroubledLog, session_maker
 from ui import OS
 from views.wrapper import Response
 from base import TroubledLogState
@@ -12,6 +12,7 @@ task = Blueprint('task', __name__)
 # 获取所有task
 @task.route(rule='/tasks', methods=['GET'])
 def get_tasks():
+    session = session_maker()
     values = session.query(Task).all()
     return Response.success(values)
 
@@ -19,6 +20,7 @@ def get_tasks():
 # 新增一个task
 @task.route(rule='/tasks', methods=['PUT'])
 def add_task():
+    session = session_maker()
     parser = reqparse.RequestParser()
     parser.add_argument('name', type=str)
     parser.add_argument('team', type=str)
@@ -34,10 +36,11 @@ def add_task():
 # 启动case
 @task.route('/tasks/<task_id>', methods=['PUT'])
 def start_task(task_id: str) -> None:
+    session = session_maker()
     _processing_logs = session.query(TroubledLog).filter(TroubledLog.TASK_ID == task_id).filter(
         TroubledLog.STATE == TroubledLogState.PROCESSING).all()
 
-    if _processing_logs is not None:
+    if len(_processing_logs) != 0:
         raise RuntimeError('当前有任务正在执行中')
 
     _task = session.query(Task).filter(Task.ID == task_id).one_or_none()
@@ -51,9 +54,11 @@ def start_task(task_id: str) -> None:
         TroubledLog.STATE == TroubledLogState.PROCESSING).one_or_none()
 
     _case_id = _task.CASES
-    _cases = session.query(Case).filter(Case.ID in _case_id.split(',')).all()
+    _cases = session.query(Case).filter(Case.ID.in_(_case_id.split(','))).all()
 
     os = OS.instance(_task.PLATFORM)
-    os.start(_troubled_log, _cases)
+    os.start(_troubled_log, *_cases)
 
-    os.destroy(_troubled_log)
+    session.query(TroubledLog).filter(TroubledLog.TASK_ID == task_id).filter(
+        TroubledLog.STATE == TroubledLogState.PROCESSING).update({TroubledLog.STATE: TroubledLogState.DONE})
+    session.commit()

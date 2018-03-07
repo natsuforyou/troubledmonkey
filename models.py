@@ -10,7 +10,7 @@ Base = declarative_base()
 metadata = Base.metadata
 
 db = create_engine(db_url)
-session = sessionmaker(bind=db)()
+session_maker = sessionmaker(bind=db)
 
 
 class Case(Base):
@@ -53,8 +53,8 @@ class Task(Base):
 
     def __init__(self, obj):
         self.NAME = obj.get('name')
-        self.SCHEMA = obj.get('team')
-        self.KEYWORDS = obj.get('platform')
+        self.TEAM = obj.get('team')
+        self.PLATFORM = obj.get('platform')
         self.CASES = obj.get('cases')
         self.COMMENTS = obj.get('comments')
 
@@ -104,7 +104,7 @@ class TroubledLogDetail(Base):
     CASE_NAME = Column(String(20))
     TROUBLED_STRATEGY = Column(String(20))
     TROUBLED_RESPONSE = Column(String)
-    STATE = Column(String)
+    STATE = Column(String(20))
     IS_CRASH = Column(String(5))
     CRASH_LOG = Column(String(500))
     SCREEN_SHOT = Column(String)

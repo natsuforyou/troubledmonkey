@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask_restful import reqparse
 import json
 
-from models import Case, TroubledLog, TroubledLogDetail, session
+from models import Case, TroubledLog, TroubledLogDetail, session_maker
 from monkeys import monkeys
 from base import TroubledLogState, TroubledLogDetailState
 
@@ -12,6 +12,7 @@ banana = Blueprint('banana', __name__)
 # 篡改结果
 @banana.route('/bananas', methods=['POST'])
 def bananas() -> str:
+    session = session_maker()
     parser = reqparse.RequestParser()
     parser.add_argument('url', type=str)
     parser.add_argument('param', type=str)
@@ -25,9 +26,9 @@ def bananas() -> str:
     _troubled_log = session.query(TroubledLog).filter(
         TroubledLog.STATE == TroubledLogState.PROCESSING).one_or_none()
 
-    _troubled_log_detail: TroubledLogDetail = session.query(TroubledLogDetail).filter(
-        TroubledLogDetail.ID == _troubled_log.TASK_ID).filter(
-        TroubledLog.STATE == TroubledLogDetailState.UI_START).one_or_none()
+    _troubled_log_detail = session.query(TroubledLogDetail).filter(
+        TroubledLogDetail.LOG_ID == _troubled_log.ID).filter(
+        TroubledLogDetail.STATE == TroubledLogDetailState.UI_START).one_or_none()
 
     if _troubled_log_detail is not None:
 
@@ -39,10 +40,12 @@ def bananas() -> str:
         if url.__contains__(_keywords) | param.__contains__(_keywords):
             _troubled_result = monkeys.troubled(args.get('url'), args.get('body'))
             _changed_response = json.dumps(_troubled_result.get('changed_response'))
-            _troubled_log_detail.TROUBLED_STRATEGY = _troubled_result.get('trouble_count')
-            _troubled_log_detail.TROUBLED_RESPONSE = _changed_response
-            _troubled_log_detail.STATE = TroubledLogDetailState.MONKEY_DONE
-            session.update(_troubled_log_detail)
+            session.query(TroubledLogDetail).filter(TroubledLogDetail.LOG_ID == _troubled_log.ID).filter(
+                TroubledLogDetail.STATE == TroubledLogDetailState.UI_START).update(
+                {TroubledLogDetail.TROUBLED_STRATEGY: _troubled_result.get('trouble_count'),
+                 TroubledLogDetail.TROUBLED_RESPONSE: _changed_response,
+                 TroubledLogDetail.STATE: TroubledLogDetailState.MONKEY_DONE})
+
             session.commit()
             return _changed_response
 

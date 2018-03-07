@@ -6,7 +6,6 @@ import random
 import sys
 
 from base import ChangeType
-from models import TroubledLogDetail, session
 
 
 class Monkey(object):
@@ -110,19 +109,6 @@ class Monkeys(Monkey):
                     self.monkeyCache[change_type] = monkey
                     break
         return result
-
-    # def troubled(self, log_id, case, url, content) -> str:
-    #     json_object = json.loads(content)
-    #
-    #     selected_change_type = self.do_troubled(url, '', json_object)
-    #     changed_response = json.dumps(json_object)
-    #
-    #     troubled_log_detail = TroubledLogDetail(log_id=log_id, case_id=case.ID, case_name=case.NAME,
-    #                                             troubled_strategy='',
-    #                                             troubled_response=changed_response)
-    #     session.add(troubled_log_detail)
-    #     session.commit()
-    #     return changed_response
 
     def troubled(self, url, content) -> dict:
         json_object = json.loads(content)

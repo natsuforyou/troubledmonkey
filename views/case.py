@@ -3,7 +3,7 @@ import json
 from flask import Blueprint
 from flask_restful import reqparse
 
-from models import Case, session
+from models import Case, session_maker
 from monkeys import monkeys
 from views.wrapper import Response
 
@@ -13,6 +13,7 @@ case = Blueprint('case', __name__)
 # 列出所有case
 @case.route(rule='/cases', methods=['GET'])
 def get_cases():
+    session = session_maker()
     values = session.query(Case).all()
     return Response.success(values)
 
@@ -29,6 +30,7 @@ def get_total():
 # 新增一个case
 @case.route(rule='/cases', methods=['PUT'])
 def add_case():
+    session = session_maker()
     parser = reqparse.RequestParser()
     parser.add_argument('name', type=str)
     parser.add_argument('schema', type=str)
