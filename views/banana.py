@@ -39,7 +39,7 @@ def bananas() -> str:
 
         if url.__contains__(_keywords) | param.__contains__(_keywords):
             _troubled_result = monkeys.troubled(args.get('url'), args.get('body'))
-            _changed_response = json.dumps(_troubled_result.get('changed_response'))
+            _changed_response = _troubled_result.get('changed_response')
             session.query(TroubledLogDetail).filter(TroubledLogDetail.LOG_ID == _troubled_log.ID).filter(
                 TroubledLogDetail.STATE == TroubledLogDetailState.UI_START).update(
                 {TroubledLogDetail.TROUBLED_STRATEGY: _troubled_result.get('trouble_count'),

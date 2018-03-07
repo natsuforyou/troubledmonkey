@@ -35,7 +35,7 @@ def add_task():
 
 # 启动case
 @task.route('/tasks/<task_id>', methods=['PUT'])
-def start_task(task_id: str) -> None:
+def start_task(task_id: str):
     session = session_maker()
     _processing_logs = session.query(TroubledLog).filter(TroubledLog.TASK_ID == task_id).filter(
         TroubledLog.STATE == TroubledLogState.PROCESSING).all()
@@ -62,3 +62,4 @@ def start_task(task_id: str) -> None:
     session.query(TroubledLog).filter(TroubledLog.TASK_ID == task_id).filter(
         TroubledLog.STATE == TroubledLogState.PROCESSING).update({TroubledLog.STATE: TroubledLogState.DONE})
     session.commit()
+    return Response.success()
